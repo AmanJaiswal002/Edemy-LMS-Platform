@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 40" width="130" height="40">
+  <g transform="translate(0, 5)">
+    <rect x="2" y="2" width="26" height="26" rx="4" fill="#2874F0"/>
+    <path fill="#FFE500" d="M10 7h10v4h-6v3h5v4h-5v7h-4V7z"/>
+    <text x="34" y="22" font-family="'Segoe UI', Roboto, sans-serif" font-weight="bold" font-style="italic" font-size="20" fill="#2874F0">Flipkart</text>
+  </g>
+</svg>
