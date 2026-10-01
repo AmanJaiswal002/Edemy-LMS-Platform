@@ -15,7 +15,13 @@ app.use(cors())
 
 // Route
 app.get('/', (req, res)=> res.send("API Working"))
-app.post('/clerk', express.json(), clerkWebhooks)
+
+const clerkBodyParser = express.json({
+  verify: function(req, res, buf) {
+    req.rawBody = buf;
+  }
+});
+app.post('/clerk', clerkBodyParser, clerkWebhooks)
 
 // Port
 const PORT = process.env.PORT || 5000
