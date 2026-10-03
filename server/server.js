@@ -3,24 +3,41 @@ import cors from 'cors'
 import 'dotenv/config'
 import connectDB from './configs/mongodb.js'
 import { clerkWebhooks } from './controllers/webhooks.js'
+import educatorRouter from './routes/educatorRoutes.js'
+import { clerkMiddleware } from '@clerk/express'
+import ConnectCloudinary from './configs/cloudinary.js'
+import courseRouter from './routes/courseRoute.js'
+import userRouter from './routes/userRoutes.js'
 
 // Tnitialize Express
 const app = express()
 
 // Conect to database
 await connectDB()
+await ConnectCloudinary()
 
 // Middlewares
 app.use(cors())
+app.use(clerkMiddleware())
 
-// Route
+// Routes
 app.get('/', (req, res)=> res.send("API Working"))
+app.use('/api/course', express.json(), courseRouter)
+app.use('/api/user', express.json(), userRouter)
 
+
+// Educator Routes
+app.use('/api/educator', express.json(), educatorRouter)
+
+
+// Clerk Webhook Body Parser
 const clerkBodyParser = express.json({
   verify: function(req, res, buf) {
     req.rawBody = buf;
   }
 });
+
+// Clerk Webhook Route
 app.post('/clerk', clerkBodyParser, clerkWebhooks)
 
 // Port
