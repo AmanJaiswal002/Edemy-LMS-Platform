@@ -6,6 +6,8 @@ import { assets } from '../../assets/assets'
 import humanizeDuration from 'humanize-duration';
 import Footer from '../../components/student/Footer'
 import YouTube from 'react-youtube'
+import { useAuth, useUser } from '@clerk/clerk-react'
+import { toast } from 'react-hot-toast'
 
 const CourseDetails = () => {
 
@@ -15,10 +17,25 @@ const CourseDetails = () => {
   const [openSections, setOpenSections] = useState({})
   const [isAlreadyEnrolled, setIsAlreadyEnrolled] = useState(false)
   const [playerData, setPlayerData] = useState(null)
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false)
+  const [checkoutData, setCheckoutData] = useState({ name: '', email: '' })
+
+  const { getToken } = useAuth()
+  const { user } = useUser()
+
+  useEffect(() => {
+    if (user) {
+      setCheckoutData({
+        name: user.fullName || '',
+        email: user.primaryEmailAddress?.emailAddress || ''
+      })
+    }
+  }, [user])
 
   const {allCourses, calculateRating, calculateNoOfLectures, 
-  calculateCourseDuration, calculateChapterTime, currency} = useContext(AppContext)
+  calculateCourseDuration, calculateChapterTime, currency, backendUrl} = useContext(AppContext)
 
+  // Fetch Course Data
   const fetchCourseData = async ()=>{
     const findCourse = allCourses.find(course => course._id === id)
     setCourseData(findCourse);
@@ -28,14 +45,141 @@ const CourseDetails = () => {
     fetchCourseData()
   },[allCourses, id])
 
+
+// Toggle Chapter
 const toggleSection = (index)=>{
   setOpenSections((prev)=>(
     {...prev,
       [index]: !prev[index],
     }
-  ));
-};
+  ))
+}
 
+// Razorpay Payment
+const handlePayment = async () => {
+  try {
+
+    const token = await getToken()
+
+    if (!token) {
+      toast.error('Please login first')
+      return
+    }
+
+    if (!courseData) {
+      toast.error('Course data not found')
+      return
+    }
+
+    const response = await fetch(
+      `${backendUrl}/api/payment/create-order`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          courseId: courseData._id,
+          name: checkoutData.name,
+          email: checkoutData.email
+        })
+      }
+    )
+
+    const data = await response.json()
+
+    if (!data.success) {
+      toast.error(data.message)
+      return
+    }
+
+    // Razorpay Checkout Options
+    const options = {
+
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: data.order.amount,
+      currency: data.order.currency,
+
+      name: 'Edemy',
+      description: courseData.courseTitle,
+      order_id: data.order.id,
+
+      handler: async function (response) {
+        try {
+          const verifyResponse = await fetch(
+            `${backendUrl}/api/payment/verify`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                courseId: courseData._id,
+                name: checkoutData.name,
+                email: checkoutData.email,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            }
+          )
+
+          const verifyData = await verifyResponse.json()
+
+          if (verifyData.success) {
+            toast.success(
+             'Payment successful! Course enrolled.'
+            )
+                  
+            setIsAlreadyEnrolled(true)
+                
+          } else {
+            toast.error(
+            verifyData.message || 'Payment verification failed'
+           )
+         }
+
+         } catch (error) {
+           toast.error(error.message)
+         }
+       },
+
+       modal: {
+        ondismiss: function () {
+         toast.error('Payment cancelled')
+        }
+      }, 
+
+      theme: {
+        color: '#2563eb'
+      },
+
+      prefill: {
+        name: checkoutData.name,
+        email: checkoutData.email
+      }
+    }
+
+    // Check Razorpay Script
+    if (!window.Razorpay) {
+      toast.error('Razorpay failed to load')
+      return
+    }
+
+    setShowCheckoutModal(false) // Close custom modal before popping razorpay
+    
+    const razorpay = new window.Razorpay(options)
+    razorpay.open()
+  } catch (error) {
+    console.error('Payment Error:', error)
+    toast.error(error.message)
+          
+   }
+ }
+
+  
   return courseData ? (
     <>
     <div className='flex md:flex-row flex-col-reverse gap-10 relative items-start
@@ -163,7 +307,7 @@ const toggleSection = (index)=>{
             </div>
           </div>
 
-          <button className='md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium hover:bg-blue-700 transition-all'>
+          <button onClick={() => setShowCheckoutModal(true)} className='md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium hover:bg-blue-700 transition-all'>
             {isAlreadyEnrolled ? 'Already Enrolled' : 'Enroll Now'}
           </button>
 
@@ -181,6 +325,41 @@ const toggleSection = (index)=>{
       </div>
 
     </div>
+    
+    {/* Checkout Modal */}
+    {showCheckoutModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden relative">
+          <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
+            <h3 className="text-xl font-bold text-gray-800">Checkout Details</h3>
+            <button onClick={() => setShowCheckoutModal(false)} className="text-gray-400 hover:text-gray-600">
+              <img src={assets.cross_icon} alt="Close" className="w-4 h-4 cursor-pointer" />
+            </button>
+          </div>
+          
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input type="text" value={checkoutData.name} onChange={(e) => setCheckoutData({...checkoutData, name: e.target.value})} 
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Enter your name" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+              <input type="email" value={checkoutData.email} onChange={(e) => setCheckoutData({...checkoutData, email: e.target.value})} 
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Enter your email" />
+            </div>
+            
+            <div className="pt-4">
+               <button onClick={handlePayment} className="w-full py-3 rounded bg-blue-600 text-white font-medium hover:bg-blue-700 transition-all flex justify-center items-center gap-2">
+                 Proceed to Payment 
+                 <img src={assets.arrow_icon} alt="arrow" className="w-4 h-4 filter invert" />
+               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
     <Footer />
     </>
   ) : <Loading />

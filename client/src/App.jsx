@@ -13,6 +13,7 @@ import MyCourses from './pages/educator/MyCourses'
 import StudentsEnrolled from './pages/educator/StudentsEnrolled'
 import Navbar from './components/student/Navbar'
 import "quill/dist/quill.snow.css"
+import { Toaster } from 'react-hot-toast';
 
 const App = () => {
 
@@ -20,6 +21,7 @@ const App = () => {
 
   return (
     <div className='text-default min-h-screen bg-white'>
+      <Toaster />
       {!isEducatorRoute && <Navbar />}
     
       <Routes>

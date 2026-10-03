@@ -83,11 +83,13 @@ export const AppContextProvider = (props)=>{
         }
     },[user])
 
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+
     const value = {
         currency, allCourses, navigate, calculateRating,
         isEducator, setIsEducator, calculateNoOfLectures, 
         calculateCourseDuration, calculateChapterTime, enrolledCourses,
-        fetchUserEnrolledCourses
+        fetchUserEnrolledCourses, backendUrl
 
     }
 

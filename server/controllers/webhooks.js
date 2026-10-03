@@ -7,16 +7,17 @@ export const clerkWebhooks = async (req, res) => {
     try {
         const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
 
-        // Crucial fix: Convert req.rawBody buffer to string so Svix can verify it correctly
-        const payloadString = req.rawBody ? req.rawBody.toString('utf8') : "";
-
+        // Fetch raw payload string and headers
+        const payloadString = req.body.toString('utf8');
+        
         await whook.verify(payloadString, {
             "svix-id": req.headers["svix-id"],
             "svix-timestamp": req.headers["svix-timestamp"],
             "svix-signature": req.headers["svix-signature"]
         });
 
-        const { data, type } = req.body;
+        const parsedBody = JSON.parse(payloadString);
+        const { data, type } = parsedBody;
 
         switch (type) {
             case "user.created": {
@@ -56,7 +57,7 @@ export const clerkWebhooks = async (req, res) => {
         }
 
     } catch (error) {
-        console.error("Clerk Webhooks Error:", error.message);
+        console.error("Clerk Webhooks Code Fix Error:", error.message);
         res.json({success: false, message: error.message})
     }
 };

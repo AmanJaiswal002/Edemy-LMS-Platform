@@ -8,6 +8,7 @@ import { clerkMiddleware } from '@clerk/express'
 import ConnectCloudinary from './configs/cloudinary.js'
 import courseRouter from './routes/courseRoute.js'
 import userRouter from './routes/userRoutes.js'
+import paymentRouter from './routes/paymentRoutes.js'
 
 // Tnitialize Express
 const app = express()
@@ -24,21 +25,15 @@ app.use(clerkMiddleware())
 app.get('/', (req, res)=> res.send("API Working"))
 app.use('/api/course', express.json(), courseRouter)
 app.use('/api/user', express.json(), userRouter)
+app.use('/api/payment', express.json(), paymentRouter)
 
 
 // Educator Routes
 app.use('/api/educator', express.json(), educatorRouter)
 
 
-// Clerk Webhook Body Parser
-const clerkBodyParser = express.json({
-  verify: function(req, res, buf) {
-    req.rawBody = buf;
-  }
-});
-
 // Clerk Webhook Route
-app.post('/clerk', clerkBodyParser, clerkWebhooks)
+app.post('/clerk', express.raw({ type: 'application/json' }), clerkWebhooks)
 
 // Port
 const PORT = process.env.PORT || 5000
