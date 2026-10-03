@@ -26,3 +26,31 @@ export const userEnrolledCourses = async (req, res)=>{
         res.json({ success: false, message: error.message })
     }
 }
+
+// Sync User from Frontend
+export const syncUser = async (req, res) => {
+    try {
+        const userId = req.auth.userId;
+        const { name, email, imageUrl } = req.body;
+
+        const dateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short', hour12: true }).toUpperCase();
+
+        let user = await User.findById(userId);
+
+        if (!user) {
+            user = await User.create({
+                _id: userId,
+                name: name || "Test User",
+                email: email || "test@example.com",
+                imageUrl: imageUrl || "https://via.placeholder.com/150",
+                enrolledCourses: []
+            });
+        } else {
+            await user.save();
+        }
+
+        res.json({ success: true, message: "User Synced & timestamp updated" });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}

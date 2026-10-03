@@ -73,13 +73,32 @@ export const AppContextProvider = (props)=>{
       fetchUserEnrolledCourses()
     },[])
 
-       const logToken = async ()=>{
-           console.log("Clerk Token:", await getToken());
+       const syncUserToDatabase = async ()=>{
+           try {
+               const token = await getToken();
+               if (!token) return;
+               
+               await fetch(backendUrl + '/api/user/sync', {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json',
+                       Authorization: `Bearer ${token}`
+                   },
+                   body: JSON.stringify({
+                       name: user.fullName || '',
+                       email: user.primaryEmailAddress?.emailAddress || '',
+                       imageUrl: user.imageUrl || ''
+                   })
+               });
+               console.log("User synced successfully with local MongoDB");
+           } catch (error) {
+               console.error("User sync error:", error);
+           }
        }
 
     useEffect(()=>{
         if(user){
-            logToken()
+            syncUserToDatabase()
         }
     },[user])
 
