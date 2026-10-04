@@ -3,8 +3,8 @@
 Welcome to **Edemy LMS Platform**, a modern, full-stack Learning Management System designed to bridge the gap between enthusiastic learners and knowledgeable educators.
 
 ### 🌐 Live Links
-- **Frontend (Live Demo):** [https://edemy-lms-education-platform.vercel.app/]
-- **Backend (API):** [https://edemy-lms-backend-server.vercel.app/]
+- **Frontend (Live Demo):** [https://edemy-lms-education-platform.vercel.app/](https://edemy-lms-education-platform.vercel.app/)
+- **Backend (API):** [https://edemy-lms-backend-server.vercel.app/](https://edemy-lms-backend-server.vercel.app/)
 
 ## 🚀 Features
 
