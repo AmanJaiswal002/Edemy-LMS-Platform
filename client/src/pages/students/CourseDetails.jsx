@@ -174,8 +174,11 @@ const handlePayment = async () => {
     razorpay.open()
   } catch (error) {
     console.error('Payment Error:', error)
-    toast.error(error.message)
-          
+    if (error.message === 'Failed to fetch') {
+      toast.error('Backend server is not running or unreachable.')
+    } else {
+      toast.error(error.message)
+    }
    }
  }
 
