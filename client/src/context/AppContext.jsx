@@ -12,7 +12,7 @@ export const AppContextProvider = (props)=>{
     const navigate = useNavigate()
 
     const {getToken} = useAuth()
-    const {user} = useUser()
+    const {user, isLoaded} = useUser()
 
     const [allCourses, setAllCourse] = useState([])
     const [isEducator, setIsEducator] = useState(true)
@@ -97,10 +97,14 @@ export const AppContextProvider = (props)=>{
        }
 
     useEffect(()=>{
-        if(user){
-            syncUserToDatabase()
+        if (isLoaded) {
+            if (user) {
+                syncUserToDatabase()
+            } else {
+                localStorage.removeItem('adminAuth')
+            }
         }
-    },[user])
+    },[user, isLoaded])
 
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
