@@ -24,11 +24,11 @@ export const clerkWebhooks = async (req, res) => {
                 const userData = {
                     _id: data.id,
                     email: data.email_addresses[0].email_address,
-                    name: (data.first_name || "") + " " + (data.last_name || ""),
+                    name: data.first_name ? data.first_name + (data.last_name ? ' ' + data.last_name : '') : (data.email_addresses[0].email_address || 'Test User'),
                     imageUrl: data.image_url || "",
                 };
 
-                await User.create(userData);
+                await User.findByIdAndUpdate(data.id, userData, { upsert: true });
                 res.json({ success: true });
                 break;
             }

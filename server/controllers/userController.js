@@ -29,6 +29,7 @@ export const userEnrolledCourses = async (req, res)=>{
 
 // Sync User from Frontend
 export const syncUser = async (req, res) => {
+    console.log("Incoming syncUser request. auth:", req.auth, "body:", req.body);
     try {
         const userId = req.auth.userId;
         const { name, email, imageUrl } = req.body;
