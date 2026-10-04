@@ -21,23 +21,34 @@ export const clerkWebhooks = async (req, res) => {
 
         switch (type) {
             case "user.created": {
-                const userData = {
-                    _id: data.id,
-                    email: data.email_addresses[0].email_address,
-                    name: data.first_name ? data.first_name + (data.last_name ? ' ' + data.last_name : '') : (data.email_addresses[0].email_address || 'Test User'),
-                    imageUrl: data.image_url || "",
-                };
+                const dateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short', hour12: true }).toUpperCase();
+                
+                try {
+                    const newUser = new User({
+                        _id: data.id,
+                        name: data.first_name ? data.first_name + (data.last_name ? ' ' + data.last_name : '') : (data.email_addresses[0].email_address || 'Test User'),
+                        email: data.email_addresses[0].email_address,
+                        imageUrl: data.image_url || "",
+                        enrolledCourses: [],
+                        createdAt: dateStr,
+                        updatedAt: dateStr
+                    });
+                    await newUser.save();
+                } catch(error) {
+                    if (error.code !== 11000) throw error;
+                }
 
-                await User.findByIdAndUpdate(data.id, userData, { upsert: true });
                 res.json({ success: true });
                 break;
             }
 
             case "user.updated": {
+                const time = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short', hour12: true }).toUpperCase();
                 const userData = {
                     email: data.email_addresses[0].email_address,
                     name: (data.first_name || "") + " " + (data.last_name || ""),
                     imageUrl: data.image_url || "",
+                    updatedAt: time
                 };
 
                 await User.findByIdAndUpdate(data.id, userData);

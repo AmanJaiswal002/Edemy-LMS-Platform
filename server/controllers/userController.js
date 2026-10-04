@@ -44,9 +44,15 @@ export const syncUser = async (req, res) => {
                 name: name || "Test User",
                 email: email || "test@example.com",
                 imageUrl: imageUrl || "https://via.placeholder.com/150",
-                enrolledCourses: []
+                enrolledCourses: [],
+                createdAt: dateStr,
+                updatedAt: dateStr
             });
         } else {
+            user.name = name || user.name;
+            user.email = email || user.email;
+            user.imageUrl = imageUrl || user.imageUrl;
+            user.updatedAt = dateStr; // Forces modified state
             await user.save();
         }
 

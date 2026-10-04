@@ -17,14 +17,7 @@ const userSchema = new mongoose.Schema(
     }, {timestamps: false}
 );
 
-userSchema.pre('save', function(next) {
-    const time = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short', hour12: true }).toUpperCase();
-    if (this.isNew) {
-        this.createdAt = time;
-    }
-    this.updatedAt = time;
-    next();
-});
+
 
 const User = mongoose.model('User', userSchema);
 
